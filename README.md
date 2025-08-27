@@ -1,69 +1,69 @@
-# PR Pilot
+# React + TypeScript + Vite
 
-A Tauri + React + TypeScript application with comprehensive code quality tools.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Code Quality & Development Tools
+Currently, two official plugins are available:
 
-This project is configured with a comprehensive set of tools to ensure code quality, consistent style, and automated checks:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-### 🚀 **Code Quality Tools**
+## Expanding the ESLint configuration
 
-- **ESLint** - JavaScript/TypeScript linting with React-specific rules
-- **Prettier** - Code formatting and style consistency
-- **TypeScript** - Static type checking with strict configuration
-- **Husky** - Git hooks for pre-commit and commit-msg validation
-- **lint-staged** - Run linters only on staged files
-- **Commitlint** - Enforce conventional commit message format
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-### 📝 **Available Scripts**
+```js
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-```bash
-# Code quality checks
-pnpm lint              # Run ESLint on source files
-pnpm lint:fix          # Run ESLint with auto-fix
-pnpm format            # Format code with Prettier
-pnpm format:check      # Check if code is properly formatted
-pnpm type-check        # Run TypeScript type checking
-pnpm quality           # Run all quality checks (lint + format + type-check)
+      // Remove tseslint.configs.recommended and replace with this
+      ...tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      ...tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      ...tseslint.configs.stylisticTypeChecked,
 
-# Development
-pnpm dev               # Start development server
-pnpm build             # Build for production
-pnpm preview           # Preview production build
-pnpm tauri             # Tauri commands
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+]);
 ```
 
-### 🔧 **Git Hooks**
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-The following Git hooks are automatically configured:
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x';
+import reactDom from 'eslint-plugin-react-dom';
 
-- **pre-commit**: Runs lint-staged to check and fix code quality issues
-- **commit-msg**: Validates commit messages using conventional commit format
-
-### 📋 **Conventional Commits**
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/) for commit messages:
-
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+]);
 ```
-type(scope): description
-
-Examples:
-feat: add new user authentication
-fix(auth): resolve login validation issue
-docs: update API documentation
-style: format code according to style guide
-refactor: restructure user management module
-test: add unit tests for auth service
-chore: update dependencies
-```
-
-### 🎨 **Code Style**
-
-- **Prettier**: Automatic code formatting on save
-- **ESLint**: Code quality rules and best practices
-- **TypeScript**: Strict type checking enabled
-- **React**: Hooks rules and accessibility guidelines
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
