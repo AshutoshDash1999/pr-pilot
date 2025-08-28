@@ -1,0 +1,20 @@
+{
+  "appId": "com.ashutosh-dash.pr-pilot",
+  "productName": "PR Pilot",
+  "copyright": "Copyright © 2025",
+  "files": ["dist-electron", "dist-react"],
+  "icon": "./icon.jpeg",
+  "mac": {
+    "target": ["dmg"]
+  },
+  "linux": {
+    "target": "AppImage",
+    "category": "Utility"
+  },
+  "win": {
+    "target": ["portable", "msi"]
+  },
+  "forceCodeSigning": false,
+  "buildDependenciesFromSource": false,
+  "npmRebuild": false
+}

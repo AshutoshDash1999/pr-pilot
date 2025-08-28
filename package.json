@@ -2,16 +2,21 @@
   "name": "pr-pilot",
   "private": true,
   "version": "0.0.0",
+  "description": "PR Pilot",
   "type": "module",
   "main": "dist-electron/main.js",
+  "author": "Ashutosh Dash",
   "scripts": {
     "dev:react": "vite",
     "dev:electron": "electron .",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "prettier:fix": "prettier --write .",
     "transpile:electron": "tsc --project src/electron/tsconfig.json",
-    "prettier:fix": "prettier --write ."
+    "dist:mac": "pnpm run transpile:electron && pnpm run build && electron-builder --mac --arm64",
+    "dist:win": "pnpm run transpile:electron && pnpm run build && set CSC_IDENTITY_AUTO_DISCOVERY=false && set ELECTRON_BUILDER_SIGNING_IDENTITY= && electron-builder --win --x64",
+    "dist:linux": "pnpm run transpile:electron && pnpm run build && electron-builder --linux --x64"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
@@ -27,21 +32,22 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.33.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
     "electron": "^37.3.1",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2",
     "lint-staged": "^16.1.4",
     "prettier": "^3.6.2",
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1"
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^7.1.2"
   }
 }
