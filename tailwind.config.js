@@ -5,4 +5,12 @@ export default {
   daisyui: {
     themes: true,
   },
+  theme: {
+    extend: {
+      fontFamily: {
+        nunito: ['Nunito', 'system-ui', 'sans-serif'],
+        sans: ['Nunito', 'system-ui', 'sans-serif'],
+      },
+    },
+  },
 };
