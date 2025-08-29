@@ -4,7 +4,7 @@ import type { ResourceUsage } from '../../../../types';
 import Toast from '../../components/Toast';
 
 interface WelcomePageProps {
-  onPageChange?: (page: 'welcome' | 'git-details') => void;
+  onPageChange?: (page: 'welcome' | 'code-review') => void;
 }
 
 const WelcomePage = ({ onPageChange }: WelcomePageProps) => {
@@ -47,7 +47,7 @@ const WelcomePage = ({ onPageChange }: WelcomePageProps) => {
         localStorage.setItem('gitDetails', JSON.stringify(result.gitDetails));
 
         // Navigate to git details page
-        onPageChange?.('git-details');
+        onPageChange?.('code-review');
       } else {
         showToast(result.error || 'Failed to select directory', 'error');
       }
