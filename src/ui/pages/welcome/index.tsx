@@ -1,6 +1,6 @@
 import { Folder, GitCompareArrows, Info, Shield, Zap } from 'lucide-react';
 import { useEffect } from 'react';
-import type { ResourceUsage } from '../../../types/electron';
+import type { ResourceUsage } from '../../../../types';
 
 const WelcomePage = () => {
   useEffect(() => {

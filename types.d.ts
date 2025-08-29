@@ -17,3 +17,5 @@ declare global {
     electronAPI: ElectronAPI;
   }
 }
+
+export {}; //This makes the file a module, which is required for global declarations to work properly
