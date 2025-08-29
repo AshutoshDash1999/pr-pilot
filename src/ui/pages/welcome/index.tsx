@@ -1,6 +1,19 @@
 import { Folder, GitCompareArrows, Info, Shield, Zap } from 'lucide-react';
+import { useEffect } from 'react';
+import type { ResourceUsage } from '../../../types/electron';
 
 const WelcomePage = () => {
+  useEffect(() => {
+    // Test if electronAPI is available
+    if (window.electronAPI) {
+      window.electronAPI.subscribeResourceUsage((statistics: ResourceUsage) => {
+        console.log('Received resource usage:', statistics);
+      });
+    } else {
+      console.error('electronAPI is not available on window object');
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-base-300 flex flex-col items-center justify-center p-8">
       {/* Main Icon */}

@@ -3,6 +3,7 @@
   "productName": "PR Pilot",
   "copyright": "Copyright © 2025",
   "files": ["dist-electron", "dist-react"],
+  "extraResources": ["dist-electron/preload.cjs"],
   "icon": "./icon.jpeg",
   "mac": {
     "target": ["dmg"]
