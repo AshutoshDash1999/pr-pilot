@@ -1,8 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import path from 'path';
 import { getPreloadScript } from './pathResolver.js';
 import { getCPUUsage, getRAMUsage } from './resourceManager.js';
-import { isDev } from './util.js';
+import { getGitDetails, isDev, isGitRepository } from './util.js';
 
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({
@@ -28,6 +28,30 @@ app.on('ready', () => {
 
   ipcMain.handle('getRAMUsage', async () => {
     return getRAMUsage();
+  });
+
+  ipcMain.handle('select-git-directory', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: 'Select Git Repository',
+      buttonLabel: 'Select Repository',
+    });
+
+    if (!result.canceled && result.filePaths.length > 0) {
+      const selectedPath = result.filePaths[0];
+
+      if (await isGitRepository(selectedPath)) {
+        const gitDetails = await getGitDetails(selectedPath);
+        return { success: true, gitDetails };
+      } else {
+        return {
+          success: false,
+          error: 'Selected directory is not a Git repository',
+        };
+      }
+    }
+
+    return { success: false, error: 'No directory selected' };
   });
 
   // Start resource usage monitoring

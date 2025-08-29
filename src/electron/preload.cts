@@ -11,4 +11,5 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
   },
   getCPUUsage: () => electron.ipcRenderer.invoke('getCPUUsage'),
   getRAMUsage: () => electron.ipcRenderer.invoke('getRAMUsage'),
+  selectGitDirectory: () => electron.ipcRenderer.invoke('select-git-directory'),
 });

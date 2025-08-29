@@ -1,8 +1,23 @@
 import { Folder, GitCompareArrows, Info, Shield, Zap } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ResourceUsage } from '../../../../types';
+import Toast from '../../components/Toast';
 
-const WelcomePage = () => {
+interface WelcomePageProps {
+  onPageChange?: (page: 'welcome' | 'git-details') => void;
+}
+
+const WelcomePage = ({ onPageChange }: WelcomePageProps) => {
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'error' | 'success' | 'info';
+    isVisible: boolean;
+  }>({
+    message: '',
+    type: 'info',
+    isVisible: false,
+  });
+
   useEffect(() => {
     // Test if electronAPI is available
     if (window.electronAPI) {
@@ -13,6 +28,46 @@ const WelcomePage = () => {
       console.error('electronAPI is not available on window object');
     }
   }, []);
+
+  const handleOpenRepository = () => {
+    handleFolderSelect();
+  };
+
+  const handleFolderSelect = async () => {
+    if (!window.electronAPI) {
+      showToast('Electron API not available', 'error');
+      return;
+    }
+
+    try {
+      const result = await window.electronAPI.selectGitDirectory();
+
+      if (result.success && result.gitDetails) {
+        // Store git details in localStorage
+        localStorage.setItem('gitDetails', JSON.stringify(result.gitDetails));
+
+        // Navigate to git details page
+        onPageChange?.('git-details');
+      } else {
+        showToast(result.error || 'Failed to select directory', 'error');
+      }
+    } catch (error) {
+      console.error('Error selecting directory:', error);
+      showToast('An error occurred while selecting directory', 'error');
+    }
+  };
+
+  const showToast = (message: string, type: 'error' | 'success' | 'info') => {
+    setToast({
+      message,
+      type,
+      isVisible: true,
+    });
+  };
+
+  const closeToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
 
   return (
     <div className="min-h-screen bg-base-300 flex flex-col items-center justify-center p-8">
@@ -32,7 +87,10 @@ const WelcomePage = () => {
       </p>
 
       {/* Open Repository Button */}
-      <button className="btn btn-primary btn-xl px-8 py-4 mb-16 bg-gradient-to-r from-blue-500 to-purple-500 border-0 hover:from-blue-600 hover:to-purple-600 rounded-xl">
+      <button
+        onClick={handleOpenRepository}
+        className="btn btn-primary btn-xl px-8 py-4 mb-16 bg-gradient-to-r from-blue-500 to-purple-500 border-0 hover:from-blue-600 hover:to-purple-600 rounded-xl"
+      >
         <Folder className="w-5 h-5 mr-2" />
         Open Repository
       </button>
@@ -85,6 +143,14 @@ const WelcomePage = () => {
       <p className="text-gray-400 text-center">
         Ready to revolutionize your code review workflow?
       </p>
+
+      {/* Toast */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={closeToast}
+      />
     </div>
   );
 };
