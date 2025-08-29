@@ -20,11 +20,27 @@
       rel="preload"
       href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap"
       as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
+    />
+
+    <!-- Content Security Policy -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com;"
     />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/ui/main.tsx"></script>
+    <script>
+      // Handle font preloading without inline event handlers
+      document.addEventListener('DOMContentLoaded', function () {
+        const preloadLink = document.querySelector(
+          'link[rel="preload"][as="style"]'
+        );
+        if (preloadLink) {
+          preloadLink.rel = 'stylesheet';
+        }
+      });
+    </script>
   </body>
 </html>
