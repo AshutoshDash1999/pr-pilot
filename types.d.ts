@@ -11,6 +11,24 @@ export interface GitDetails {
   remoteUrl: string;
 }
 
+export interface GitBranches {
+  local: string[];
+  remote: string[];
+  current: string;
+}
+
+export interface GitFetchResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+export interface GitBranchesResult {
+  success: boolean;
+  branches?: GitBranches;
+  error?: string;
+}
+
 export interface ElectronAPI {
   subscribeResourceUsage: (
     callback: (statistics: ResourceUsage) => void
@@ -22,6 +40,8 @@ export interface ElectronAPI {
     gitDetails?: GitDetails;
     error?: string;
   }>;
+  gitFetchAll: (repoPath: string) => Promise<GitFetchResult>;
+  gitGetBranches: (repoPath: string) => Promise<GitBranchesResult>;
 }
 
 declare global {

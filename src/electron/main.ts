@@ -1,8 +1,12 @@
+import { exec } from 'child_process';
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import path from 'path';
+import { promisify } from 'util';
 import { getPreloadScript } from './pathResolver.js';
 import { getCPUUsage, getRAMUsage } from './resourceManager.js';
 import { getGitDetails, isDev, isGitRepository } from './util.js';
+
+const execAsync = promisify(exec);
 
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({
@@ -52,6 +56,73 @@ app.on('ready', () => {
     }
 
     return { success: false, error: 'No directory selected' };
+  });
+
+  // Git branch operations
+  ipcMain.handle('git-fetch-all', async (event, repoPath: string) => {
+    try {
+      const { stderr } = await execAsync('git fetch --all', {
+        cwd: repoPath,
+      });
+      if (stderr && !stderr.includes('From')) {
+        console.warn('Git fetch warnings:', stderr);
+      }
+      return { success: true, message: 'Branches fetched successfully' };
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      return { success: false, error: `Failed to fetch branches: ${error}` };
+    }
+  });
+
+  ipcMain.handle('git-get-branches', async (event, repoPath: string) => {
+    try {
+      // Get all branches (local and remote)
+      const { stdout: localBranches } = await execAsync(
+        'git branch --format="%(refname:short)"',
+        { cwd: repoPath }
+      );
+      const { stdout: remoteBranches } = await execAsync(
+        'git branch -r --format="%(refname:short)"',
+        { cwd: repoPath }
+      );
+
+      // Parse branch lists
+      const local = localBranches
+        .trim()
+        .split('\n')
+        .filter(b => b.length > 0);
+      const remote = remoteBranches
+        .trim()
+        .split('\n')
+        .filter(b => b.length > 0);
+
+      // Get current branch
+      const { stdout: currentBranch } = await execAsync(
+        'git branch --show-current',
+        { cwd: repoPath }
+      );
+
+      // Ensure we have at least some branches
+      if (local.length === 0) {
+        return {
+          success: false,
+          error:
+            'No local branches found. This might not be a valid Git repository.',
+        };
+      }
+
+      return {
+        success: true,
+        branches: {
+          local,
+          remote,
+          current: currentBranch.trim(),
+        },
+      };
+    } catch (error) {
+      console.error('Error getting branches:', error);
+      return { success: false, error: `Failed to get branches: ${error}` };
+    }
   });
 
   // Start resource usage monitoring

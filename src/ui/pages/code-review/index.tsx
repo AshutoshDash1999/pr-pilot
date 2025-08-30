@@ -1,5 +1,6 @@
 import { FileCode2, GitPullRequestArrow } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { GitBranches, GitDetails } from '../../../../types';
 import {
   CodeDiffViewer,
   FilesChangedPanel,
@@ -15,29 +16,151 @@ import type {
   PRStats,
 } from './types';
 
-const CodeReviewPage = () => {
+interface CodeReviewPageProps {
+  onBackToWelcome?: () => void;
+}
+
+const CodeReviewPage = ({ onBackToWelcome }: CodeReviewPageProps) => {
   const [activeTab, setActiveTab] = useState<'code-review' | 'pr-details'>(
     'code-review'
   );
+  const [projectInfo, setProjectInfo] = useState<ProjectInfo | null>(null);
+  const [branches, setBranches] = useState<string[]>([]);
+  const [gitRepoPath, setGitRepoPath] = useState<string>('');
+  const [isLoadingBranches, setIsLoadingBranches] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dummy data for demonstration
-  const projectInfo: ProjectInfo = {
-    name: 'PR Pilot',
-    version: '0.0.0',
-    repoName: 'pr-pilot',
-    repoUrl: 'https://github.com/username/pr-pilot.git',
-    currentBranch: 'feature/code-review-ui',
-    targetBranch: 'main',
+  useEffect(() => {
+    // Load repository data from localStorage
+    const gitDetailsStr = localStorage.getItem('gitDetails');
+    if (gitDetailsStr) {
+      try {
+        const gitDetails: GitDetails = JSON.parse(gitDetailsStr);
+
+        // Convert GitDetails to ProjectInfo
+        const project: ProjectInfo = {
+          name: 'PR Pilot',
+          version: '0.0.0',
+          repoName: gitDetails.name,
+          repoUrl: gitDetails.remoteUrl,
+          currentBranch: gitDetails.currentBranch,
+          targetBranch: 'main', // Default target branch
+        };
+
+        setProjectInfo(project);
+        setGitRepoPath(gitDetails.path);
+
+        // Fetch real branches from Git
+        fetchBranches(gitDetails.path);
+      } catch (error) {
+        console.error('Error parsing git details:', error);
+        setError('Failed to load repository details');
+      }
+    }
+  }, []);
+
+  const fetchBranches = async (repoPath: string) => {
+    if (!window.electronAPI) {
+      setError('Electron API not available');
+      return;
+    }
+
+    setIsLoadingBranches(true);
+    setError(null);
+
+    try {
+      // First fetch all branches from remote
+      const fetchResult = await window.electronAPI.gitFetchAll(repoPath);
+      if (!fetchResult.success) {
+        console.warn(
+          'Warning: Failed to fetch remote branches:',
+          fetchResult.error
+        );
+        // Continue anyway to get local branches
+      }
+
+      // Get all available branches
+      const branchesResult = await window.electronAPI.gitGetBranches(repoPath);
+      if (branchesResult.success && branchesResult.branches) {
+        const gitBranches: GitBranches = branchesResult.branches;
+
+        // Combine local and remote branches, removing duplicates
+        const allBranches = [
+          ...gitBranches.local,
+          ...gitBranches.remote.map(branch => branch.replace('origin/', '')),
+        ].filter((branch, index, arr) => arr.indexOf(branch) === index);
+
+        setBranches(allBranches);
+
+        // Update project info with actual current branch
+        if (projectInfo && gitBranches.current !== projectInfo.currentBranch) {
+          setProjectInfo(prev =>
+            prev
+              ? {
+                  ...prev,
+                  currentBranch: gitBranches.current,
+                }
+              : null
+          );
+        }
+      } else {
+        setError(`Failed to get branches: ${branchesResult.error}`);
+      }
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      setError('Failed to fetch branches from Git repository');
+    } finally {
+      setIsLoadingBranches(false);
+    }
   };
 
-  const branches = [
-    'main',
-    'develop',
-    'feature/code-review-ui',
-    'feature/auth',
-    'bugfix/login-issue',
-  ];
+  const handleBackToWelcome = () => {
+    // Clear the selected repository
+    localStorage.removeItem('gitDetails');
+    onBackToWelcome?.();
+  };
 
+  const handleRefreshBranches = () => {
+    if (gitRepoPath) {
+      fetchBranches(gitRepoPath);
+    }
+  };
+
+  // Show loading or redirect if no repository is selected
+  if (!projectInfo) {
+    return (
+      <div className="min-h-screen bg-base-300 flex items-center justify-center">
+        <div className="text-center">
+          <div className="loading loading-spinner loading-lg text-primary mb-4"></div>
+          <p className="text-gray-400">Loading repository...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-base-300 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="alert alert-error mb-4">
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={handleRefreshBranches}
+            className="btn btn-primary mr-2"
+          >
+            Retry
+          </button>
+          <button onClick={handleBackToWelcome} className="btn btn-ghost">
+            Back to Welcome
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Dummy data for demonstration
   const filesChanged: FileChange[] = [
     {
       name: 'src/ui/pages/code-review/index.tsx',
@@ -221,7 +344,13 @@ const CodeReviewPage = () => {
 
   return (
     <div className="min-h-screen bg-base-300">
-      <Header projectInfo={projectInfo} branches={branches} />
+      <Header
+        projectInfo={projectInfo}
+        branches={branches}
+        onBackToWelcome={handleBackToWelcome}
+        onRefreshBranches={handleRefreshBranches}
+        isLoadingBranches={isLoadingBranches}
+      />
 
       {/* Main Tabs */}
       <div className="w-full px-8 py-4">
